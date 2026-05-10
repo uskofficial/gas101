@@ -1,610 +1,106 @@
 <!DOCTYPE html>
-<html lang="th">
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="color-scheme" content="light dark">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>คลังข้อมูลอัจฉริยะ | GAS + Google Drive</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        * {
-            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-
-        .dark ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-
-        .dark ::-webkit-scrollbar-thumb {
-            background: #475569;
-        }
-
-        .hover-card {
-            transition: transform 0.2s ease, box-shadow 0.3s ease;
-        }
-
-        .hover-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px -12px rgba(0, 0, 0, 0.2);
-        }
-
-        .dark .hover-card:hover {
-            box-shadow: 0 12px 20px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        button:active:not(:disabled) {
-            transform: scale(0.97);
-        }
-
-        #themeToggle span {
-            transition: transform 0.3s ease;
-        }
-
-        html.dark body {
-            background-color: #0f172a;
-            color: #e2e8f0;
-        }
-
-        html.dark .bg-white\/80 {
-            background-color: rgba(30, 41, 59, 0.8);
-            border-color: #334155;
-        }
-
-        html.dark .bg-gray-200 {
-            background-color: #334155;
-        }
-
-        html.dark .bg-gray-100 {
-            background-color: #1e293b;
-        }
-
-        html.dark .bg-indigo-50 {
-            background-color: rgba(30, 41, 59, 0.4);
-        }
-
-        html.dark .border-gray-200 {
-            border-color: #334155;
-        }
-
-        html.dark .text-gray-400 {
-            color: #94a3b8;
-        }
-
-        html.dark .text-gray-500 {
-            color: #94a3b8;
-        }
-
-        html.dark .text-gray-600 {
-            color: #cbd5e1;
-        }
-
-        html.dark .text-gray-700 {
-            color: #e2e8f0;
-        }
-
-        html.dark input,
-        html.dark textarea {
-            background-color: #1e293b;
-            border-color: #475569;
-            color: #e2e8f0;
-        }
-
-        html.dark input:focus,
-        html.dark textarea:focus {
-            border-color: #6366f1;
-        }
-
-        html.dark .bg-white {
-            background-color: #1e293b;
-        }
-
-        html.dark .bg-gray-50 {
-            background-color: #0f172a;
-        }
-
-        html.dark .border-gray-300 {
-            border-color: #475569;
-        }
-
-        html.dark .border-gray-100 {
-            border-color: #334155;
-        }
-
-        html.dark .hover\:bg-gray-300:hover {
-            background-color: #475569 !important;
-        }
-
-        html.dark .hover\:bg-indigo-100:hover {
-            background-color: rgba(55, 65, 81, 0.4) !important;
-        }
-
-        html.dark .bg-amber-100 {
-            background-color: rgba(217, 119, 6, 0.2);
-        }
-
-        html.dark .bg-rose-100 {
-            background-color: rgba(225, 29, 72, 0.2);
-        }
-
-        html.dark .text-amber-700 {
-            color: #fbbf24;
-        }
-
-        html.dark .text-rose-600 {
-            color: #f87171;
-        }
-
-        html.dark .bg-slate-800\/90 {
-            background-color: rgba(30, 41, 59, 0.9);
-        }
-
-        html.dark .text-slate-200 {
-            color: #e2e8f0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GAS API CRUD & Drive Storage</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
-<body class="bg-gray-50 text-gray-800 transition-colors duration-300 p-4 md:p-8 font-sans antialiased">
-
-    <div class="max-w-3xl mx-auto">
-        <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">
-                    ✨ GAS 101 คอร์สเรียน
-                </h1>
-                <p class="text-xs text-gray-500 mt-1">จัดการข้อมูล + รูปภาพบน Google Drive คอร์สเรียนสอนสร้าง API ด้วย google app script ทำงานกับ html บน github</p>
-            </div>
-            <button id="themeToggle"
-                class="relative w-12 h-6 rounded-full bg-gray-300 shadow-inner transition-all duration-300 focus:outline-none flex items-center p-1">
-                <span class="block w-4 h-4 rounded-full bg-white shadow-md transition-transform duration-300"></span>
-            </button>
-        </div>
-
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200 p-5 md:p-6 mb-8 transition-all">
-            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-700">
-                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                <span id="formTitle">สร้างรายการใหม่</span>
-            </h2>
-
-            <div class="space-y-4">
-                <input id="selected_id" type="hidden" />
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">📛 ชื่อ</label>
-                    <input id="name" type="text" placeholder="เช่น: สมชาย ใจดี"
-                        class="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none transition" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">📝 รายละเอียด</label>
-                    <input id="detail" type="text" placeholder="ตำแหน่ง / ข้อมูลสำคัญ / หมายเหตุ"
-                        class="w-full px-4 py-2.5 rounded-xl border border-gray-300 bg-white focus:ring-2 focus:ring-blue-400 outline-none transition" />
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">🖼️ รูปภาพ (JPG/PNG)</label>
-                    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                        <label class="cursor-pointer bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-5 py-2 rounded-xl border border-indigo-200 transition text-sm font-medium shadow-sm">
-                            เลือกรูปภาพ
-                            <input id="imageFile" type="file" accept="image/*" class="hidden" />
-                        </label>
-                        <span id="fileName" class="text-xs text-gray-400 italic truncate max-w-[200px]"></span>
-                    </div>
-                    <div id="imagePreview" class="mt-3 hidden relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                        <img id="previewImg" alt="ตัวอย่างรูป" class="w-full h-full object-cover" />
-                        <button type="button" id="clearPreviewBtn" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-md hover:bg-red-600">&times;</button>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap gap-3 pt-3">
-                    <button id="btnAdd" onclick="createData()"
-                        class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-all active:scale-[0.98] flex justify-center items-center gap-1">
-                        ✨ เพิ่มข้อมูล
-                    </button>
-                    <button id="btnUpdate" onclick="updateData()"
-                        class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-all hidden active:scale-[0.98] justify-center items-center gap-1">
-                        🔄 บันทึกการแก้ไข
-                    </button>
-                    <button onclick="clearForm()"
-                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium px-5 rounded-xl transition-all active:scale-[0.98]">
-                        ล้างฟอร์ม
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center gap-2">
-                <h3 class="font-bold text-gray-800 text-lg">📂 รายการข้อมูลทั้งหมด</h3>
-                <span id="recordCount" class="text-xs bg-gray-200 px-2 py-0.5 rounded-full">0 รายการ</span>
-            </div>
-            <button onclick="readData()"
-                class="text-sm bg-white border border-gray-300 px-4 py-1.5 rounded-full shadow-sm hover:bg-gray-50 transition font-medium flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                รีเฟรช
-            </button>
-        </div>
-
-        <div id="dataList" class="space-y-3 pb-6">
-            <div class="flex justify-center items-center py-10">
-                <div class="animate-pulse flex space-x-2">
-                    <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
-                    <div class="w-3 h-3 bg-blue-400 rounded-full animation-delay-200"></div>
-                    <div class="w-3 h-3 bg-blue-400 rounded-full animation-delay-500"></div>
-                </div>
-                <p class="ml-3 text-gray-400 text-sm">กำลังโหลดข้อมูล...</p>
-            </div>
-        </div>
+<body class="bg-gray-100 p-4 md:p-8">
+  <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-bold mb-4 text-blue-600">
+      Manage Data & Google Drive Photos
+    </h2>
+    <div class="space-y-3 mb-6 p-4 border rounded bg-blue-50">
+      <input id="selected_id" type="hidden" />
+      <input id="name" type="text" placeholder="Name" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none" />
+      <input id="detail" type="text" placeholder="Detail" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none" />
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Upload Image:</label>
+        <input id="imageFile" type="file" accept="image/*" class="w-full p-1 text-sm border rounded bg-white mt-1" />
+        <p id="fileName" class="text-xs text-gray-500 mt-1 italic"></p>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button id="btnAdd" onclick="createData()" class="flex-1 bg-green-500 text-white py-2 rounded font-bold hover:bg-green-600 transition">Add New</button>
+        <button id="btnUpdate" onclick="updateData()" class="flex-1 bg-yellow-500 text-white py-2 rounded font-bold hidden transition">Save Changes</button>
+        <button onclick="clearForm()" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition">Clear</button>
+      </div>
     </div>
-
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxscaR0MOodbb0QUmXK83jmcsHboeHoNC3H9pgCWoLRUMNkgQA3HF9MFCui5FXJ_ujiFg/exec";
-
-        let base64Image = "";
-        let currentEditingId = "";
-        let isRequesting = false;
-
-        const $ = id => document.getElementById(id);
-        const themeToggleBtn = $("themeToggle");
-
-        function applyThemeColors(isDark) {
-            if (isDark) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-            const thumb = themeToggleBtn?.querySelector('span');
-            if (thumb) {
-                thumb.style.transform = isDark ? 'translateX(24px)' : 'translateX(0)';
-            }
-        }
-
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            let isDark;
-            if (savedTheme) {
-                isDark = savedTheme === 'dark';
-            } else {
-                isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            }
-            applyThemeColors(isDark);
-        }
-
-        function toggleTheme() {
-            const isDark = !document.documentElement.classList.contains('dark');
-            applyThemeColors(isDark);
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        }
-
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener("click", toggleTheme);
-        }
-
-        initTheme();
-
-        async function swalToast(message, type = "success", duration = 2500) {
-            const icons = { success: "success", error: "error", warning: "warning", info: "info" };
-            const isDark = document.documentElement.classList.contains("dark");
-            Swal.fire({
-                icon: icons[type] || "info",
-                title: message,
-                toast: true,
-                position: "top-end",
-                showConfirmButton: false,
-                timer: duration,
-                background: isDark ? "#1e293b" : "#fff",
-                color: isDark ? "#e2e8f0" : "#1e293b",
-                timerProgressBar: true
-            });
-        }
-
-        async function confirmDialog(message, title = "ยืนยันการลบ") {
-            const isDark = document.documentElement.classList.contains("dark");
-            const result = await Swal.fire({
-                title: title,
-                text: message,
-                icon: "question",
-                showCancelButton: true,
-                confirmButtonColor: "#ef4444",
-                cancelButtonColor: "#6b7280",
-                confirmButtonText: "ใช่ ลบเลย",
-                cancelButtonText: "ยกเลิก",
-                background: isDark ? "#1e293b" : "#fff",
-                color: isDark ? "#f1f5f9" : "#0f172a"
-            });
-            return result.isConfirmed;
-        }
-
-        function setFormDisabled(disabled) {
-            const btns = [$("btnAdd"), $("btnUpdate")];
-            btns.forEach(btn => { if (btn) btn.disabled = disabled; });
-            isRequesting = disabled;
-        }
-
-        const fileInput = $("imageFile");
-        const previewContainer = $("imagePreview");
-        const previewImg = $("previewImg");
-        const clearPreviewBtn = $("clearPreviewBtn");
-
-        function updatePreview(dataUrl) {
-            if (dataUrl && dataUrl.startsWith("data:image")) {
-                previewImg.src = dataUrl;
-                previewContainer.classList.remove("hidden");
-                base64Image = dataUrl;
-            } else if (dataUrl && (dataUrl.includes("googleusercontent.com") || dataUrl.includes("drive"))) {
-                previewImg.src = dataUrl.replace("uc?id=", "thumbnail?id=").replace("&export=download", "&sz=w200");
-                previewContainer.classList.remove("hidden");
-                base64Image = dataUrl;
-            } else {
-                previewContainer.classList.add("hidden");
-                if (!dataUrl) base64Image = "";
-            }
-        }
-
-        fileInput?.addEventListener("change", e => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const fileNameSpan = $("fileName");
-            if (fileNameSpan) fileNameSpan.innerText = `📎 ${file.name.substring(0, 30)}`;
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const result = ev.target.result;
-                updatePreview(result);
-            };
-            reader.readAsDataURL(file);
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-bold text-gray-700 text-lg">Data List</h3>
+      <button onclick="readData()" class="text-blue-600 hover:underline text-sm font-medium">Refresh List</button>
+    </div>
+    <div id="statusMsg" class="hidden text-center text-sm py-2 px-4 rounded mb-3"></div>
+    <div id="dataList" class="space-y-3">
+      <p class="text-center text-gray-400 italic">Loading data...</p>
+    </div>
+  </div>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxscaR0MOodbb0QUmXK83jmcsHboeHoNC3H9pgCWoLRUMNkgQA3HF9MFCui5FXJ_ujiFg/exec"
+    let base64Image = "";
+    const $ = id => document.getElementById(id);
+    $("imageFile").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      $("fileName").innerText = `Selected: ${file.name}`;
+      const reader = new FileReader();
+      reader.onload = () => (base64Image = reader.result);
+      reader.readAsDataURL(file);
+    });
+    function showStatus(msg, isSuccess) {
+      const el = $("statusMsg");
+      el.textContent = msg;
+      el.className = `text-center text-sm py-2 px-4 rounded mb-3 ${isSuccess ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`;
+      el.classList.remove("hidden");
+      setTimeout(() => el.classList.add("hidden"), 4000);
+    }
+    async function readData() {
+      try {
+        const res = await fetch(`${API_URL}?action=read&t=${Date.now()}`);
+        const data = await res.json();
+        const list = $("dataList");
+        list.innerHTML = data.length === 0 ? '<p class="text-center text-gray-400">No data found.</p>' : "";
+        data.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "flex items-center gap-4 p-3 border rounded bg-white hover:shadow-md transition";
+          const imgSrc = item.Image ? item.Image.replace("uc?id=", "thumbnail?id=").replace("&export=download", "&sz=w400") : "https://placehold.co/60x60?text=No+Img";
+          card.innerHTML = `<img src="${imgSrc}" referrerpolicy="no-referrer" class="w-16 h-16 object-cover rounded shadow-sm border bg-gray-100" onerror="this.src='https://placehold.co/60x60?text=No+Img'"><div class="flex-1 min-w-0"><div class="font-bold text-gray-800">${item.Name}</div><div class="text-sm text-gray-500 truncate">${item.Detail}</div><div class="text-[10px] text-gray-300 mt-1 uppercase font-mono truncate">${item.ID}</div></div><div class="flex flex-col gap-1 shrink-0"><button onclick='editMode(${JSON.stringify(item)})' class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200">Edit</button><button onclick="deleteData('${item.ID}')" class="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200">Del</button></div>`;
+          list.appendChild(card);
         });
-
-        clearPreviewBtn?.addEventListener("click", () => {
-            previewContainer.classList.add("hidden");
-            if (previewImg) previewImg.src = "";
-            if (fileInput) fileInput.value = "";
-            const fileNameSpan = $("fileName");
-            if (fileNameSpan) fileNameSpan.innerText = "";
-            base64Image = "";
-        });
-
-        function editMode(item) {
-            currentEditingId = item.ID;
-            $("selected_id").value = item.ID;
-            $("name").value = item.Name;
-            $("detail").value = item.Detail;
-            const formTitle = $("formTitle");
-            if (formTitle) formTitle.innerText = "✏️ แก้ไขข้อมูล";
-            $("btnUpdate").classList.remove("hidden");
-            $("btnAdd").classList.add("hidden");
-
-            if (item.Image && item.Image.trim() !== "") {
-                updatePreview(item.Image);
-            } else {
-                previewContainer.classList.add("hidden");
-                base64Image = "";
-            }
-            const fileNameSpan = $("fileName");
-            if (fileNameSpan) {
-                fileNameSpan.innerText = item.Image ? "🖼️ มีรูปอยู่แล้ว (เลือกใหม่เพื่อเปลี่ยน)" : "ยังไม่มีรูป สามารถเพิ่มได้";
-            }
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-
-        function clearForm() {
-            $("selected_id").value = "";
-            $("name").value = "";
-            $("detail").value = "";
-            if (fileInput) fileInput.value = "";
-            const fileNameSpan = $("fileName");
-            if (fileNameSpan) fileNameSpan.innerText = "";
-            previewContainer.classList.add("hidden");
-            base64Image = "";
-            currentEditingId = "";
-            const formTitle = $("formTitle");
-            if (formTitle) formTitle.innerText = "✨ สร้างรายการใหม่";
-            $("btnUpdate").classList.add("hidden");
-            $("btnAdd").classList.remove("hidden");
-            if (previewImg) previewImg.src = "";
-        }
-
-        function validateForm() {
-            const nameVal = $("name").value.trim();
-            const detailVal = $("detail").value.trim();
-            if (!nameVal || !detailVal) {
-                swalToast("กรุณากรอกชื่อและรายละเอียดให้ครบถ้วน", "warning");
-                return false;
-            }
-            return true;
-        }
-
-        async function sendRequest(payload, successMsg = "ดำเนินการสำเร็จ") {
-            if (isRequesting) {
-                swalToast("กรุณารอสักครู่ให้รายการก่อนหน้าเสร็จสิ้น", "info");
-                return;
-            }
-            setFormDisabled(true);
-            try {
-                const res = await fetch(API_URL, {
-                    method: "POST",
-                    redirect: "follow",
-                    body: JSON.stringify(payload)
-                });
-                const result = await res.json();
-                if (result.success === true || (result.success === undefined && result.message)) {
-                    await swalToast(result.message || successMsg, "success");
-                    clearForm();
-                    await readData();
-                } else {
-                    await swalToast(result.message || "เกิดข้อผิดพลาดจากระบบ", "error");
-                }
-            } catch (err) {
-                await swalToast("✅ ส่งข้อมูลเรียบร้อย กำลังโหลดข้อมูลล่าสุด...", "success");
-                clearForm();
-                setTimeout(() => readData(), 1500);
-            } finally {
-                setFormDisabled(false);
-            }
-        }
-
-        async function createData() {
-            if (!validateForm()) return;
-            if (!base64Image) {
-                const confirmNoImg = await Swal.fire({
-                    title: "ยังไม่ได้เลือกรูปภาพ",
-                    text: "คุณต้องการบันทึกโดยไม่มีรูปภาพใช่หรือไม่? (สามารถแก้ไขเพิ่มทีหลังได้)",
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonText: "บันทึก",
-                    cancelButtonText: "ยกเลิก"
-                });
-                if (!confirmNoImg.isConfirmed) return;
-            }
-            await sendRequest({
-                action: "create",
-                name: $("name").value.trim(),
-                detail: $("detail").value.trim(),
-                image: base64Image || ""
-            }, "✨ เพิ่มข้อมูลสำเร็จ");
-        }
-
-        async function updateData() {
-            if (!validateForm()) return;
-            const id = $("selected_id").value;
-            if (!id) { 
-                swalToast("กรุณาเลือกรายการที่ต้องการแก้ไขก่อน", "error"); 
-                return; 
-            }
-            await sendRequest({
-                action: "update",
-                id: id,
-                name: $("name").value.trim(),
-                detail: $("detail").value.trim(),
-                image: base64Image || ""
-            }, "🔁 อัปเดตข้อมูลสำเร็จ");
-        }
-
-        async function deleteData(id) {
-            const confirmed = await confirmDialog("ข้อมูลจะถูกลบอย่างถาวร รวมถึงรูปภาพใน Google Drive ด้วย", "⚠️ ยืนยันการลบ");
-            if (!confirmed) return;
-            if (isRequesting) return;
-            setFormDisabled(true);
-            try {
-                const res = await fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "delete", id: id })
-                });
-                const result = await res.json();
-                if (result.success) {
-                    await swalToast("🗑️ ลบข้อมูลสำเร็จ", "success");
-                    await readData();
-                    if ($("selected_id").value === id) clearForm();
-                } else {
-                    await swalToast(result.message || "ลบข้อมูลไม่สำเร็จ", "error");
-                }
-            } catch (err) {
-                await swalToast("ระบบมีปัญหา แต่ทำการลบเรียบร้อยแล้ว กรุณาตรวจสอบอีกครั้ง", "warning");
-                setTimeout(() => readData(), 1500);
-            } finally {
-                setFormDisabled(false);
-            }
-        }
-
-        function escapeHtml(str) {
-            if (!str) return "";
-            return str.replace(/[&<>]/g, function (m) {
-                if (m === "&") return "&amp;";
-                if (m === "<") return "&lt;";
-                if (m === ">") return "&gt;";
-                return m;
-            });
-        }
-
-        async function readData() {
-            const container = $("dataList");
-            if (!container) return;
-            container.innerHTML = `<div class="flex justify-center py-8"><div class="animate-pulse flex flex-col items-center"><div class="w-10 h-10 rounded-full bg-gray-300 mb-2"></div><div class="text-gray-400">กำลังโหลด...</div></div></div>`;
-            try {
-                const res = await fetch(`${API_URL}?action=read&t=${Date.now()}`);
-                const data = await res.json();
-                const countSpan = $("recordCount");
-                if (!Array.isArray(data)) throw new Error("ข้อมูลไม่ถูกต้อง");
-                if (countSpan) countSpan.innerText = `${data.length} รายการ`;
-                if (data.length === 0) {
-                    container.innerHTML = `<div class="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                        <p class="mt-2 text-gray-500">ยังไม่มีข้อมูล เริ่มต้นเพิ่มรายการแรกกันเลย</p>
-                    </div>`;
-                    return;
-                }
-                container.innerHTML = "";
-                data.forEach(item => {
-                    const card = document.createElement("div");
-                    card.className = "group bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover-card transition-all";
-                    let imgSrc = item.Image && item.Image !== "" ? item.Image : "";
-                    let thumbnailSrc = "";
-                    if (imgSrc) {
-                        if (imgSrc.startsWith("data:image")) thumbnailSrc = imgSrc;
-                        else thumbnailSrc = imgSrc.replace("uc?id=", "thumbnail?id=").replace("&export=download", "&sz=w100");
-                    } else {
-                        thumbnailSrc = "";
-                    }
-                    const validImg = thumbnailSrc || "https://placehold.co/80x80?text=📷";
-                    card.innerHTML = `
-                        <div class="flex gap-4 flex-col sm:flex-row">
-                            <div class="flex-shrink-0 self-center sm:self-start">
-                                <img src="${validImg}" referrerpolicy="no-referrer" 
-                                    class="w-20 h-20 rounded-xl object-cover border border-gray-200 bg-gray-100 shadow-sm"
-                                    onerror="this.onerror=null; this.src='https://placehold.co/80x80?text=No+Img';">
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex flex-wrap justify-between items-start gap-2">
-                                    <h4 class="font-bold text-lg text-gray-800 break-words">${escapeHtml(item.Name)}</h4>
-                                    <div class="flex gap-1">
-                                        <button onclick='editMode(${JSON.stringify(item).replace(/\\/g, '\\\\')})' 
-                                            class="text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full hover:bg-amber-200 transition font-medium">แก้ไข</button>
-                                        <button onclick="deleteData('${item.ID}')" 
-                                            class="text-xs bg-rose-100 text-rose-600 px-3 py-1.5 rounded-full hover:bg-rose-200 transition font-medium">ลบ</button>
-                                    </div>
-                                </div>
-                                <p class="text-sm text-gray-600 mt-1 break-words">${escapeHtml(item.Detail)}</p>
-                                <div class="text-[11px] text-gray-400 font-mono mt-2 truncate">ID: ${item.ID.substring(0, 12)}...</div>
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch (err) {
-                container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-center">⚠️ โหลดข้อมูลไม่สำเร็จ: ${err.message}</div>`;
-                swalToast("โหลดข้อมูลล้มเหลว ตรวจสอบเครือข่ายหรือ API", "error");
-            }
-        }
-
-        window.createData = createData;
-        window.updateData = updateData;
-        window.deleteData = deleteData;
-        window.editMode = editMode;
-        window.clearForm = clearForm;
-        window.readData = readData;
-
-        readData();
-    </script>
+      } catch { $("dataList").innerHTML = '<p class="text-center text-red-500">Failed to load data.</p>'; }
+    }
+    function editMode(item) {
+      $("selected_id").value = item.ID; $("name").value = item.Name; $("detail").value = item.Detail; base64Image = item.Image;
+      $("btnUpdate").classList.remove("hidden"); $("btnAdd").classList.add("hidden");
+      $("fileName").innerText = "Current image kept unless new file chosen";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    async function createData() {
+      if (!validateForm()) return;
+      await sendRequest({ action: "create", name: $("name").value, detail: $("detail").value, image: base64Image });
+    }
+    async function updateData() {
+      if (!validateForm()) return;
+      await sendRequest({ action: "update", id: $("selected_id").value, name: $("name").value, detail: $("detail").value, image: base64Image });
+    }
+    async function deleteData(id) { if (!confirm("Are you sure you want to delete this item?")) return; await sendRequest({ action: "delete", id }); }
+    async function sendRequest(payload) {
+      showStatus("⏳ กำลังดำเนินการ...", true); setFormDisabled(true);
+      try {
+        const res = await fetch(API_URL, { method: "POST", redirect: "follow", body: JSON.stringify(payload) });
+        const result = await res.json();
+        showStatus(`${result.success ? "✅" : "❌"} ${result.message}`, result.success);
+        if (result.success) { clearForm(); setTimeout(readData, 3000); }
+      } catch { showStatus("✅ ส่งข้อมูลแล้ว กำลัง Refresh...", true); clearForm(); setTimeout(readData, 3000); }
+      finally { setFormDisabled(false); }
+    }
+    function setFormDisabled(disabled) { ["btnAdd", "btnUpdate"].forEach(id => { const el = $(id); if (el) el.disabled = disabled; }); }
+    function validateForm() { if (!$("name").value || !$("detail").value) { alert("Please fill in Name and Detail."); return false; } return true; }
+    function clearForm() {
+      $("selected_id").value = ""; $("name").value = ""; $("detail").value = ""; $("imageFile").value = ""; $("fileName").innerText = "";
+      $("btnUpdate").classList.add("hidden"); $("btnAdd").classList.remove("hidden"); base64Image = "";
+    }
+    readData();
+  </script>
 </body>
-
 </html>
