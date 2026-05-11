@@ -1,106 +1,227 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GAS API CRUD & Drive Storage</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCHOOL MONEY</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body { font-family: 'Kanit', sans-serif; background-color: #f8fafc; }
+    .report-card { border: 2px solid #1e3a8a; border-radius: 12px; background: white; }
+    .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; border: 1px solid; }
+    .paid { color: #15803d; border-color: #22c55e; background: #f0fdf4; } 
+    .unpaid { color: #b91c1c; border-color: #ef4444; background: #fef2f2; } 
+    .pending { color: #d97706; border-color: #f59e0b; background: #fffbeb; }
+    .btn-pink { border: 2px solid #ec4899; color: #be185d; background: white; transition: 0.2s; }
+    .btn-pink:hover { background: #fdf2f8; }
+  </style>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
-  <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
-    <h2 class="text-xl font-bold mb-4 text-blue-600">
-      Manage Data & Google Drive Photos
-    </h2>
-    <div class="space-y-3 mb-6 p-4 border rounded bg-blue-50">
-      <input id="selected_id" type="hidden" />
-      <input id="name" type="text" placeholder="Name" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none" />
-      <input id="detail" type="text" placeholder="Detail" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none" />
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Upload Image:</label>
-        <input id="imageFile" type="file" accept="image/*" class="w-full p-1 text-sm border rounded bg-white mt-1" />
-        <p id="fileName" class="text-xs text-gray-500 mt-1 italic"></p>
-      </div>
-      <div class="flex gap-2 pt-2">
-        <button id="btnAdd" onclick="createData()" class="flex-1 bg-green-500 text-white py-2 rounded font-bold hover:bg-green-600 transition">Add New</button>
-        <button id="btnUpdate" onclick="updateData()" class="flex-1 bg-yellow-500 text-white py-2 rounded font-bold hidden transition">Save Changes</button>
-        <button onclick="clearForm()" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition">Clear</button>
+<body class="p-2 md:p-6 min-h-screen">
+
+  <div class="max-w-2xl mx-auto bg-white shadow-xl rounded-3xl overflow-hidden border">
+    
+    <div class="p-6 text-center border-b">
+      <img src="https://i.postimg.cc/FzPbqZ7n/IMG-7790.png" alt="Logo" class="w-20 h-20 mx-auto mb-2 object-contain">
+      <h1 class="text-xl font-bold text-gray-800">โรงเรียนอุทยานศึกษากระบี่</h1>
+      <p class="text-blue-800 font-bold uppercase text-xs tracking-widest">School Money</p>
+      <p class="text-gray-500 text-[10px]">ระบบแจ้งจ่ายค่าใช้จ่าย</p>
+    </div>
+
+    <div id="searchSection" class="p-8">
+      <div class="bg-blue-50 p-8 rounded-2xl border-2 border-blue-100 text-center">
+        <p class="font-bold text-gray-600 mb-4">ระบุชื่อ - นามสกุล เพื่อค้นหา</p>
+        <input id="nameInput" type="text" placeholder="พิมพ์ชื่อ - นามสกุล" 
+               class="w-full p-4 border-2 border-pink-300 rounded-xl text-center text-lg focus:outline-none mb-4">
+        <button onclick="doSearch()" class="w-full bg-slate-200 text-slate-800 py-4 rounded-xl font-bold hover:bg-slate-300">ค้นหา</button>
       </div>
     </div>
-    <div class="flex justify-between items-center mb-4">
-      <h3 class="font-bold text-gray-700 text-lg">Data List</h3>
-      <button onclick="readData()" class="text-blue-600 hover:underline text-sm font-medium">Refresh List</button>
+
+    <div id="reportSection" class="hidden px-6 py-6 space-y-6">
+      <div class="report-card p-4 space-y-1">
+        <p><strong>ชื่อ - สกุล :</strong> <span id="resName"></span></p>
+        <p><strong>โปรแกรมหอพัก :</strong> <span id="resDorm"></span></p>
+      </div>
+
+      <div class="flex justify-between items-end">
+        <h3 class="text-xs font-bold text-gray-700 uppercase">รายงานประวัติและยอดค้างชำระ <br><span class="font-normal text-gray-400">(Payment History & Balance)</span></h3>
+        <p id="clock" class="text-[10px] text-blue-900"></p>
+      </div>
+
+      <div class="report-card overflow-hidden">
+        <div class="p-4 flex justify-between items-center bg-gray-50 border-b">
+          <p class="font-bold text-sm">ค่าธรรมเนียมหอพัก 1/2569 <span class="text-[10px] font-normal block">(Dormitory Fee)</span></p>
+          <div class="flex items-center gap-4">
+            <div class="text-center"><p class="text-[9px]">สถานะ</p><span id="dormStatus"></span></div>
+            <div class="text-right border-l pl-3"><p class="text-[9px]">จำนวนเงิน</p><p id="dormAmt" class="font-bold text-blue-900"></p></div>
+          </div>
+        </div>
+        <div class="p-4 flex flex-col md:flex-row items-center gap-4">
+          <button id="btnDorm" onclick="triggerUpload('dorm')" class="w-full btn-pink py-3 rounded-lg font-bold text-sm">แนบสลิปการจ่ายค่าธรรมเนียมหอพัก</button>
+          <div id="waitDorm" class="hidden text-center w-full">
+            <p class="text-orange-500 font-bold text-sm">รอตรวจสอบสถานะการจ่าย</p>
+            <p class="text-[10px] text-gray-400">ปกติใช้เวลาตรวจสอบ 7 วันทำการ</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="report-card p-4 space-y-4">
+        <p class="font-bold text-sm">ค่าอาหารรายเดือน 1/2569 <span class="text-[10px] font-normal">(Boarding Fee)</span></p>
+        <div class="grid grid-cols-3 md:grid-cols-6 gap-0 border border-gray-100">
+          <div id="monthGrid" class="contents"></div>
+        </div>
+        <div class="flex justify-between items-center font-bold pt-2 border-t">
+          <span class="text-xs">ยอดที่ต้องชำระทั้งหมด <br><span class="text-[10px] font-normal text-gray-400">(Total Outstanding)</span></span>
+          <span id="totalDebt" class="text-lg text-red-600"></span>
+        </div>
+        <div class="pt-2 flex flex-col md:flex-row items-center gap-4 border-t border-dashed">
+          <button id="btnFood" onclick="triggerUpload('food')" class="w-full btn-pink py-3 rounded-lg font-bold text-sm">แนบสลิปการจ่ายค่าอาหาร</button>
+          <div id="waitFood" class="hidden text-center w-full">
+            <p class="text-orange-500 font-bold text-sm">รอตรวจสอบสถานะการจ่าย</p>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="showBank()" class="w-full bg-blue-50 text-blue-900 py-4 rounded-xl font-bold border border-blue-200">ช่องทางการชำระเงิน</button>
+      <button onclick="location.reload()" class="w-full text-gray-400 text-xs underline">กลับหน้าค้นหา</button>
     </div>
-    <div id="statusMsg" class="hidden text-center text-sm py-2 px-4 rounded mb-3"></div>
-    <div id="dataList" class="space-y-3">
-      <p class="text-center text-gray-400 italic">Loading data...</p>
+
+    <input type="file" id="fileIn" class="hidden" onchange="handleFile()">
+
+    <div class="p-8 text-center text-[10px] text-gray-400 space-y-1">
+      <p>พบปัญหาโปรดติดต่อ 078 - 789 - 6789</p>
+      <p class="italic">" เรียนดี ประพฤติเด่น เน้นคุณภาพ ซึมซาบคุณธรรม ถูกสัมพันธ์ชุมชน "</p>
     </div>
   </div>
+
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxscaR0MOodbb0QUmXK83jmcsHboeHoNC3H9pgCWoLRUMNkgQA3HF9MFCui5FXJ_ujiFg/exec"
-    let base64Image = "";
-    const $ = id => document.getElementById(id);
-    $("imageFile").addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      $("fileName").innerText = `Selected: ${file.name}`;
-      const reader = new FileReader();
-      reader.onload = () => (base64Image = reader.result);
-      reader.readAsDataURL(file);
-    });
-    function showStatus(msg, isSuccess) {
-      const el = $("statusMsg");
-      el.textContent = msg;
-      el.className = `text-center text-sm py-2 px-4 rounded mb-3 ${isSuccess ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`;
-      el.classList.remove("hidden");
-      setTimeout(() => el.classList.add("hidden"), 4000);
-    }
-    async function readData() {
+    // ** สำคัญ: เปลี่ยนเป็น URL ของคุณที่ได้จากการ Deploy **
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz9TLqzzDDzCddSwyYEzCnpyOLU69pd6EErKgiJWYMownXOceaiIbbu0yJ6lBQJmosu/exec";
+    
+    let currentData = null;
+    let targetType = "";
+
+    async function doSearch() {
+      const name = document.getElementById('nameInput').value.trim();
+      if(!name) return;
+      
+      Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      
       try {
-        const res = await fetch(`${API_URL}?action=read&t=${Date.now()}`);
-        const data = await res.json();
-        const list = $("dataList");
-        list.innerHTML = data.length === 0 ? '<p class="text-center text-gray-400">No data found.</p>' : "";
-        data.forEach(item => {
-          const card = document.createElement("div");
-          card.className = "flex items-center gap-4 p-3 border rounded bg-white hover:shadow-md transition";
-          const imgSrc = item.Image ? item.Image.replace("uc?id=", "thumbnail?id=").replace("&export=download", "&sz=w400") : "https://placehold.co/60x60?text=No+Img";
-          card.innerHTML = `<img src="${imgSrc}" referrerpolicy="no-referrer" class="w-16 h-16 object-cover rounded shadow-sm border bg-gray-100" onerror="this.src='https://placehold.co/60x60?text=No+Img'"><div class="flex-1 min-w-0"><div class="font-bold text-gray-800">${item.Name}</div><div class="text-sm text-gray-500 truncate">${item.Detail}</div><div class="text-[10px] text-gray-300 mt-1 uppercase font-mono truncate">${item.ID}</div></div><div class="flex flex-col gap-1 shrink-0"><button onclick='editMode(${JSON.stringify(item)})' class="text-xs bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded hover:bg-yellow-200">Edit</button><button onclick="deleteData('${item.ID}')" class="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200">Del</button></div>`;
-          list.appendChild(card);
-        });
-      } catch { $("dataList").innerHTML = '<p class="text-center text-red-500">Failed to load data.</p>'; }
-    }
-    function editMode(item) {
-      $("selected_id").value = item.ID; $("name").value = item.Name; $("detail").value = item.Detail; base64Image = item.Image;
-      $("btnUpdate").classList.remove("hidden"); $("btnAdd").classList.add("hidden");
-      $("fileName").innerText = "Current image kept unless new file chosen";
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    async function createData() {
-      if (!validateForm()) return;
-      await sendRequest({ action: "create", name: $("name").value, detail: $("detail").value, image: base64Image });
-    }
-    async function updateData() {
-      if (!validateForm()) return;
-      await sendRequest({ action: "update", id: $("selected_id").value, name: $("name").value, detail: $("detail").value, image: base64Image });
-    }
-    async function deleteData(id) { if (!confirm("Are you sure you want to delete this item?")) return; await sendRequest({ action: "delete", id }); }
-    async function sendRequest(payload) {
-      showStatus("⏳ กำลังดำเนินการ...", true); setFormDisabled(true);
-      try {
-        const res = await fetch(API_URL, { method: "POST", redirect: "follow", body: JSON.stringify(payload) });
+        const res = await fetch(`${WEB_APP_URL}?action=search&name=${encodeURIComponent(name)}`);
         const result = await res.json();
-        showStatus(`${result.success ? "✅" : "❌"} ${result.message}`, result.success);
-        if (result.success) { clearForm(); setTimeout(readData, 3000); }
-      } catch { showStatus("✅ ส่งข้อมูลแล้ว กำลัง Refresh...", true); clearForm(); setTimeout(readData, 3000); }
-      finally { setFormDisabled(false); }
+        
+        if (result.found) {
+          currentData = result;
+          renderReport(result.data, result.sheetName);
+          Swal.close();
+        } else {
+          Swal.fire('ไม่พบข้อมูล', 'โปรดตรวจสอบการสะกดชื่อ-นามสกุล', 'error');
+        }
+      } catch (e) {
+        Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อสคริปต์ได้', 'error');
+      }
     }
-    function setFormDisabled(disabled) { ["btnAdd", "btnUpdate"].forEach(id => { const el = $(id); if (el) el.disabled = disabled; }); }
-    function validateForm() { if (!$("name").value || !$("detail").value) { alert("Please fill in Name and Detail."); return false; } return true; }
-    function clearForm() {
-      $("selected_id").value = ""; $("name").value = ""; $("detail").value = ""; $("imageFile").value = ""; $("fileName").innerText = "";
-      $("btnUpdate").classList.add("hidden"); $("btnAdd").classList.remove("hidden"); base64Image = "";
+
+    function renderReport(d, sheet) {
+      document.getElementById('searchSection').classList.add('hidden');
+      document.getElementById('reportSection').classList.remove('hidden');
+      
+      // อัปเดตเวลา
+      const now = new Date();
+      document.getElementById('clock').innerText = `ข้อมูล ณ วันที่: ${now.toLocaleDateString('th-TH')} | ${now.toLocaleTimeString('th-TH')} น.`;
+
+      document.getElementById('resName').innerText = d["ชื่อ-นามสกุล"];
+      document.getElementById('resDorm').innerText = sheet;
+      
+      // ค่าหอ
+      document.getElementById('dormStatus').innerText = d["ค่าธรรมเนียมหอพัก-สถานะ"];
+      document.getElementById('dormStatus').className = `status-badge ${getBadgeClass(d["ค่าธรรมเนียมหอพัก-สถานะ"])}`;
+      document.getElementById('dormAmt').innerText = Number(d["ยอดค้างค่าธรรมเนียม"]).toLocaleString();
+      
+      toggleVerifyUI('dorm', d["สถานะการตรวจสอบค่าหอพัก"]);
+
+      // ค่าอาหาร
+      const months = ["พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม"];
+      let gridHTML = "";
+      months.forEach(m => {
+        const stat = d[m] || "ยังไม่ถึงกำหนด";
+        const amt = d[`ยอดที่ค้าง(${m})`] || 0;
+        gridHTML += `<div class="border-r border-b p-2 text-center">
+          <p class="text-[9px] font-bold">${m.substring(0, 3)}</p>
+          <span class="status-badge ${getBadgeClass(stat)}">${stat}</span>
+          <p class="text-[8px] mt-1">${Number(amt).toLocaleString()} บ.</p>
+        </div>`;
+      });
+      document.getElementById('monthGrid').innerHTML = gridHTML;
+      document.getElementById('totalDebt').innerText = Number(d["ยอดรวมค้างชำระ"]).toLocaleString() + " บาท";
+      
+      toggleVerifyUI('food', d["สถานะการตรวจสอบค่าอาหาร"]);
     }
-    readData();
+
+    function getBadgeClass(s) {
+      if(s.includes("ชำระแล้ว")) return "paid";
+      if(s.includes("ค้างชำระ")) return "unpaid";
+      if(s.includes("รอตรวจสอบ")) return "pending";
+      return "not-reached";
+    }
+
+    function toggleVerifyUI(type, status) {
+      const btn = document.getElementById(type === 'dorm' ? 'btnDorm' : 'btnFood');
+      const wait = document.getElementById(type === 'dorm' ? 'waitDorm' : 'waitFood');
+      
+      if (status === "รอตรวจสอบสถานะการโอน") {
+        btn.classList.add('hidden');
+        wait.classList.remove('hidden');
+      } else {
+        btn.classList.remove('hidden');
+        wait.classList.add('hidden');
+      }
+    }
+
+    function triggerUpload(t) {
+      targetType = t;
+      document.getElementById('fileIn').click();
+    }
+
+    function handleFile() {
+      const file = document.getElementById('fileIn').files[0];
+      if(!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        Swal.fire({ title: 'กำลังอัปโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        const payload = {
+          action: targetType === 'dorm' ? 'uploadDormSlip' : 'uploadFoodSlip',
+          sheetName: currentData.sheetName,
+          rowIndex: currentData.rowIndex,
+          studentName: currentData.data["ชื่อ-นามสกุล"],
+          type: targetType,
+          image: e.target.result
+        };
+
+        const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) });
+        const result = await res.json();
+        
+        if(result.success) {
+          Swal.fire('สำเร็จ', 'บันทึกสลิปเรียบร้อยแล้ว', 'success').then(() => location.reload());
+        } else {
+          Swal.fire('ผิดพลาด', result.message, 'error');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function showBank() {
+      Swal.fire({
+        title: 'ช่องทางการชำระเงิน',
+        html: `<p class="text-sm">กสิกรไทย: 000-0-00000-0<br>โรงเรียนอุทยานศึกษากระบี่</p>
+               <img src="https://promptpay.io/0000000000000.png" class="w-40 h-40 mx-auto mt-4">`,
+        showCloseButton: true, showConfirmButton: false
+      });
+    }
   </script>
 </body>
 </html>
